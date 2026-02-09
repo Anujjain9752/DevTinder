@@ -96,7 +96,7 @@ userSchema.methods.getJWT = async function () {
 
 // now we can also do it for passwords to compare the password entered by the user with the hashed password stored in the database we can define a method in the user model to compare the password and return true or false
 
-userSchema.methods.isPassowrdMatch = async function (passwordInputByUser) {
+userSchema.methods.validatePassword = async function (passwordInputByUser) {
   const user = this;
   const passwordHash = this.password; // this.password will give us the hashed password stored in the database
 

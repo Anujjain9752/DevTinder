@@ -76,7 +76,6 @@ app.post("/login", async (req, res) => {
     }
 
     // there is a fucntion to write we call it bcrypt.compare() it will compare the password with the hash password stored in the database and return true or false
-
     const isPasswordValid = await user.validatePassword(password); // we have defined a method in the user model to compare the password and return true or false
 
     
