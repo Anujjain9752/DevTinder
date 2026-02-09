@@ -1,0 +1,86 @@
+const express = require("express");
+const authRouter = express.Router(); 
+const { validateSignUpData } = require("../utils/validation");
+const User = require("../models/user");
+const bcrypt = require("bcrypt");
+
+
+authRouter.post("/signup", async (req, res) => {
+  try {
+    // validate the incoming data
+    validateSignUpData(req);
+
+    const { firstName, lastName, emailId, password } = req.body;
+
+    // Encrpyt the passowrd now we will do it as now out data is validated
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // creating a new instance of the user model
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+
+    // console.log(user);
+
+    await user.save();
+    res.send("User added successfully");
+  } catch (err) {
+    res.status(400).json({ message: "Error adding user", error: err.message });
+  }
+});
+
+
+authRouter.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    // you can check for the email id
+
+    // first we check if email id exists in the database or not if it does not exist we will return an error message
+
+    const user = await User.findOne({ emailId: emailId });
+
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    // there is a fucntion to write we call it bcrypt.compare() it will compare the password with the hash password stored in the database and return true or false
+    const isPasswordValid = await user.validatePassword(password); // we have defined a method in the user model to compare the password and return true or false
+
+    
+    if(isPasswordValid){
+     
+      // generate a jwt token
+       const token =await user.getJWT(); // we have defined a method in the user model to generate a jwt token
+      
+      res.cookie("token", token , {
+        expires: new Date(Date.now() + 8 * 3600000), 
+      } ) // set the token in the cookie
+
+      res.send("Login successful");
+    } else {
+      throw new Error("Invalid Credentials");
+    }
+
+
+
+
+
+  } catch (err) {
+    res.status(400).json({ message: "Error logging in", error: err.message });
+  }
+});
+
+
+
+
+
+
+
+
+
+module.exports = authRouter;
