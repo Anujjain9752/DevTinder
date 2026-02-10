@@ -2,6 +2,8 @@ const express = require("express");
 const profileRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const { validateEditProfileData } = require("../utils/validation");
+const bcrypt = require("bcrypt");
+
 
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
@@ -31,7 +33,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       loggedInUser[key] = req.body[key];
     });
 
-    await loggedInUser.save()
+    await loggedInUser.save();
 
     res.send(`${loggedInUber.firstName}, Profile updated successfully`);
   } catch (err) {
@@ -40,5 +42,44 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       .json({ message: "Error editing profile", error: err.message });
   }
 });
+
+profileRouter.patch("/profile/password", userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+
+    const { oldPassword, newPassword } = req.body;
+
+    // 1️⃣ Check required fields
+    if (!oldPassword || !newPassword) {
+      return res.status(400).send("Old password and new password are required");
+    }
+
+    // 2️⃣ Validate old password (VERY IMPORTANT)
+    const isPasswordValid = await user.validatePassword(oldPassword);
+    if (!isPasswordValid) {
+      return res.status(401).send("Old password is incorrect");
+    }
+
+    // 3️⃣ Validate new password
+    if (newPassword.length < 5 || newPassword.length > 20) {
+      return res
+        .status(400)
+        .send("Password length must be between 5 and 20 characters");
+    }
+
+    // 4️⃣ Hash new password
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 5️⃣ Save
+    user.password = newHashedPassword;
+    await user.save();
+
+    // 6️⃣ Success response
+    res.status(200).send("Password updated successfully");
+  } catch (err) {
+    res.status(500).send("Something went wrong");
+  }
+});
+
 
 module.exports = profileRouter;
