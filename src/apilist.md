@@ -11,8 +11,8 @@ profile router
 - Patch /profile/password
 
 connectionRequestRouter
-- Post /request/send/interested/:userId
-- Post /request/send/ignored/:userId
+- Post /request/send/:status/:userId
+<!-- - Post /request/send/ignored/:userId -->
 - Post /request/review/accepted/:requestId
 - Post /request/review/rejected/:requestId
 
