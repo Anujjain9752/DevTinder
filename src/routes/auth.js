@@ -1,9 +1,8 @@
 const express = require("express");
-const authRouter = express.Router(); 
+const authRouter = express.Router();
 const { validateSignUpData } = require("../utils/validation");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -26,13 +25,21 @@ authRouter.post("/signup", async (req, res) => {
 
     // console.log(user);
 
-    await user.save();
-    res.send("User added successfully");
+    const savedUser = await user.save();
+    
+    const token = await savedUser.getJWT();
+
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 8 * 3600000 )
+    })
+
+
+
+    res.json({message: "User added successfully", data: savedUser});
   } catch (err) {
     res.status(400).json({ message: "Error adding user", error: err.message });
   }
 });
-
 
 authRouter.post("/login", async (req, res) => {
   try {
@@ -51,42 +58,33 @@ authRouter.post("/login", async (req, res) => {
     // there is a fucntion to write we call it bcrypt.compare() it will compare the password with the hash password stored in the database and return true or false
     const isPasswordValid = await user.validatePassword(password); // we have defined a method in the user model to compare the password and return true or false
 
-    
-    if(isPasswordValid){
-     
+    if (isPasswordValid) {
       // generate a jwt token
-       const token =await user.getJWT(); // we have defined a method in the user model to generate a jwt token
-      
-      res.cookie("token", token , {
-        expires: new Date(Date.now() + 8 * 3600000), 
-      } ) // set the token in the cookie
+      const token = await user.getJWT(); // we have defined a method in the user model to generate a jwt token
 
-      res.send("Login successful");
+      // res.cookie("token", token, {
+      //   expires: new Date(Date.now() + 8 * 3600000),
+      // }); // set the token in the cookie
+
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      });
+
+      res.send(user);
     } else {
       throw new Error("Invalid Credentials");
     }
-
-
-
-
-
   } catch (err) {
     res.status(400).json({ message: "Error logging in", error: err.message });
   }
 });
 
+authRouter.post("/logout", (req, res) => {
+  res.cookie("token", null, {
+    expires: new Date(Date.now()),
+  });
 
-
-authRouter.post("/logout", (req,res) => {
-    res.cookie("token",null, {
-        expires: new Date(Date.now()),
-    })
-
-    res.send("Logout successful");
-})
-
-
-
-
+  res.send("Logout successful");
+});
 
 module.exports = authRouter;

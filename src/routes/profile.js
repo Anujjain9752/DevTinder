@@ -34,8 +34,11 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     });
 
     await loggedInUser.save();
-
-    res.send(`${loggedInUber.firstName}, Profile updated successfully`);
+    
+    res.json({
+       message: "Profile updated successfully",
+       data: loggedInUser,
+    })
   } catch (err) {
     res
       .status(500)
