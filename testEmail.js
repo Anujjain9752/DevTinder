@@ -1,7 +1,7 @@
 const sendEmail = require("./src/utils/ses");
 
 sendEmail(
-  "YOUR_RECEIVER_VERIFIED_EMAIL@gmail.com",
+  "gthefeel@gmail.com",
   "Test Email",
   "Hello from DevTinder 🚀"
 )
