@@ -3,6 +3,7 @@ const authRouter = express.Router();
 const { validateSignUpData } = require("../utils/validation");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const sendEmail = require("../utils/ses"); // for email try 
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -69,6 +70,35 @@ authRouter.post("/login", async (req, res) => {
       res.cookie("token", token, {
         expires: new Date(Date.now() + 8 * 3600000),
       });
+
+
+      
+  // Allowed emails list
+  const allowedEmails = [
+    "anujjain9800@gmail.com",
+    "gthefeel@gmail.com",
+  ];
+
+
+ // Send email only for allowed users (non-blocking)
+  try {
+    if (allowedEmails.includes(user.emailId)) {
+      await sendEmail(
+        user.emailId,
+        "Login Successful",
+        "You have successfully logged into DevTinder 🚀"
+      );
+    }
+  } catch (err) {
+    console.error("Email failed:", err.message);
+  }
+
+
+
+
+
+
+
 
       res.send(user);
     } else {
